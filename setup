@@ -18,6 +18,7 @@ echo -e "Welcome to the ${YELLOW}AirAware installer${ENDCOLOR}!"
 echo "This utility will setup the Web server, MQTT broker and database for AirAware."
 echo
 echo -e "Note: the installer is specifically for the ${YELLOW}hio-raspbian-bookworm-lite image${ENDCOLOR}. Proceed with caution."
+echo
 read -p "Type \`install\` if you want to start the installation process: " confirm
 echo
 
@@ -117,18 +118,29 @@ echo ======================
 echo
 
 cd ~/.node-red
-curl https://raw.githubusercontent.com/airaware-iot/nodered/refs/heads/main/flow.json > flows.json 
+curl https://raw.githubusercontent.com/airaware-iot/nodered/refs/heads/main/flow.json > flows.json
+pm2 restart node-red
+
 
 echo
 echo ======================
 echo
-echo -e "${CYAN}7/$STEPS${ENDCOLOR}: Launching server"
+echo -e "${CYAN}8/$STEPS${ENDCOLOR}: Configuring server to run on startup"
 echo
 echo ======================
 echo
 
-cd ~/Airaware
-sudo php artisan serve --host=0.0.0.0 --port=80
+pm2 start sudo php --name laravel-serve -- artisan serve --host=0.0.0.0 --port=80
+pm2 save
+
+
+echo
+echo ======================
+echo
+echo -e "${YELLOW}Setup completed successfully!${ENDCOLOR}"
+echo
+echo ======================
+echo
 
 else
     echo "Stopping installer."
