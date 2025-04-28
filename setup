@@ -1,0 +1,135 @@
+#!/bin/bash
+
+# Colors
+CYAN="\e[36m"
+YELLOW="\e[33m"
+RED="\e[31m"
+ENDCOLOR="\e[0m"
+
+# Logo and greeting
+echo -e "${CYAN}  ___  _       ___                           _____          _        _ _            "
+echo -e " / _ \\(_)     / _ \\                         |_   _|        | |      | | |           "
+echo -e "/ /_\\ \\_ _ __/ /_\\ \\_      ____ _ _ __ ___    | | _ __  ___| |_ __ _| | | ___ _ __ "
+echo -e "|  _  | | '__|  _  \\ \\ /\\ / / _\` | '__/ _ \\   | || '_ \\/ __| __/ _\` | | |/ _ \\ '__|"
+echo -e "| | | | | |  | | | |\\ V  V / (_| | | |  __/  _| || | | \\__ \\ || (_| | | |  __/ |   "
+echo -e "\\_| |_/_|_|  \\_| |_/ \\_/\\_/ \\__,_|_|  \\___|  \\___/_| |_|___/\\__\\__,_|_|_|\\___|_|${ENDCOLOR}   "
+echo
+echo -e "Welcome to the ${YELLOW}AirAware installer${ENDCOLOR}!"
+echo "This utility will setup the Web server, MQTT broker and database for AirAware."
+echo
+echo -e "Note: the installer is specifically for the ${YELLOW}hio-raspbian-bookworm-lite image${ENDCOLOR}. Proceed with caution."
+read -p "Type \`install\` if you want to start the installation process: " confirm
+echo
+
+if [[ "$confirm" == "install" ]]; then
+
+STEPS=7
+
+echo
+echo ======================
+echo
+echo -e "${CYAN}1/$STEPS${ENDCOLOR}: Updating system"
+echo
+echo ======================
+echo
+
+sudo apt update 
+
+echo
+echo ======================
+echo
+echo -e "${CYAN}2/$STEPS${ENDCOLOR}: Installing PHP, Composer, and necessary extensions"
+echo
+echo ======================
+echo
+
+# Repo for PHP 8.4
+sudo wget -qO /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
+echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/php.list
+sudo apt update
+
+# Install
+sudo apt install -y php8.4-common php8.4-cli
+sudo apt install php-xml -y
+sudo apt install php-sqlite3 -y
+sudo apt install composer -y
+source ~/.bashrc
+
+echo
+echo ======================
+echo
+echo -e "${CYAN}3/$STEPS${ENDCOLOR}: Installing NodeJS"
+echo
+echo ======================
+echo
+
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+\. "$HOME/.nvm/nvm.sh"
+nvm install 22
+
+echo
+echo ======================
+echo
+echo -e "${CYAN}4/$STEPS${ENDCOLOR}: Cloning AirAware application repository"
+echo
+echo ======================
+echo
+
+git clone https://github.com/airaware-iot/dashboard.git ~/Airaware
+
+echo
+echo ======================
+echo
+echo -e "${CYAN}5/$STEPS${ENDCOLOR}: Setting up Laravel web application"
+echo
+echo ======================
+echo
+
+cd ~/Airaware
+composer install
+npm install
+touch ./database/database.sqlite
+
+cp .env.example .env
+php artisan key:generate
+php artisan migrate --force
+npm run build
+
+echo
+echo ======================
+echo
+echo -e "${CYAN}6/$STEPS${ENDCOLOR}: Disabling Hardwario web playground"
+echo
+echo ======================
+echo
+
+sudo systemctl stop nginx
+sudo systemctl disable nginx
+sudo systemctl stop apache2
+sudo systemctl disable apache2
+
+echo
+echo ======================
+echo
+echo -e "${CYAN}7/$STEPS${ENDCOLOR}: Configuring Node-RED"
+echo
+echo ======================
+echo
+
+cd ~/.node-red
+curl https://raw.githubusercontent.com/airaware-iot/nodered/refs/heads/main/flow.json > flows.json 
+
+echo
+echo ======================
+echo
+echo -e "${CYAN}7/$STEPS${ENDCOLOR}: Launching server"
+echo
+echo ======================
+echo
+
+cd ~/Airaware
+sudo php artisan serve --host=0.0.0.0 --port=80
+
+else
+    echo "Stopping installer."
+fi
