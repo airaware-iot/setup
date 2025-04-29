@@ -1,0 +1,44 @@
+#!/bin/bash
+
+echo "========================================"
+echo
+echo "   AirAware Tower wifi setup utility"
+echo
+echo "========================================"
+echo
+echo "This utility will help you set up your wireless network if you haven't done so during the operating system imaging process."
+echo
+read -p "Enter your network's SSID (the name): " ssid
+read -p "Enter your network's password: " password
+echo
+if [[ $ssid != "d" ]] then
+
+echo "Configuring wireless network now..."
+echo
+echo "1. Installing iwctl utility"
+echo
+sudo apt install iwd
+
+echo "2. Configuring iwd service"
+echo
+sudo systemctl start iwd
+sudo systemctl enable iwd
+
+echo "3. Connecting to wireless network"
+iwctl station wlan0 connect ${ssid} -P ${password}
+echo
+
+iwctl station wlan0 show
+
+echo
+echo "Please validate the listed network information. If they are incorrect, double-check your SSID and password and try again."
+
+else
+
+echo "No SSID provided, exiting."
+
+fi
+
+
+
+
