@@ -130,7 +130,7 @@ echo
 echo ======================
 echo
 
-pm2 start sudo php --name laravel-serve -- artisan serve --host=0.0.0.0 --port=80
+pm2 start sudo php --name laravel-serve -- ~/Airaware/artisan serve --host=0.0.0.0 --port=80
 pm2 save
 
 
@@ -142,8 +142,9 @@ echo
 echo ======================
 echo
 
-MAC=sudo cat /sys/class/net/$(ip route | grep default | awk '{print $5}')/address
-IP=hostname -I | awk '{print $1}'
+IFACE=$(ip route | awk '/default/ {print $5}')
+MAC=$(cat /sys/class/net/"$IFACE"/address)
+IP=$(hostname -I | awk '{print $1}')
 
 echo "AirAware Hub information"
 echo -e "   MAC address    ${YELLOW}$MAC${ENDCOLOR}"
