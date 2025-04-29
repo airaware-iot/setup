@@ -1,0 +1,18 @@
+#!/bin/bash
+
+echo Updating AirAware dashboard
+echo
+
+cd ~/Airaware
+git pull origin master
+composer update
+npm install
+npm run build
+php artisan migrate
+php artisan cache:routes
+
+echo Restarting web server
+pm2 restart laravel-serve
+
+echo Completed update
+
