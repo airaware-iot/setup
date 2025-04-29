@@ -24,7 +24,7 @@ echo
 
 if [[ "$confirm" == "install" ]]; then
 
-STEPS=7
+STEPS=8
 
 echo
 echo ======================
@@ -140,6 +140,17 @@ echo
 echo -e "${YELLOW}Setup completed successfully!${ENDCOLOR}"
 echo
 echo ======================
+echo
+
+MAC=sudo cat /sys/class/net/$(ip route | grep default | awk '{print $5}')/address
+IP=hostname -I | awk '{print $1}'
+
+echo "AirAware Hub information"
+echo -e "   MAC address    ${YELLOW}$MAC${ENDCOLOR}"
+echo -e "   IP address     ${YELLOW}$IP${ENDCOLOR}"
+echo
+echo -e "Now simply type the ${CYAN}IP address${ENDCOLOR} into any network device you'd like to view AirAware on and you're good to go!"
+echo
 echo
 
 else
